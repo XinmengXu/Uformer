@@ -1,0 +1,64 @@
+{
+    "seed": 0,
+    "description": "...des",
+    "root_dir": "~/Experiments/Wave-U-Net",
+    "cudnn_deterministic": false,
+    "trainer": {
+        "module": "trainer.trainer",
+        "main": "Trainer",
+        "epochs": 10,
+        "save_checkpoint_interval": 10,
+        "validation": {
+            "interval": 10,
+            "find_max": true,
+            "custom": {
+                "visualize_audio_limit": 20,
+                "visualize_waveform_limit": 20,
+                "visualize_spectrogram_limit": 20,
+                "sample_length": 64000
+            }
+        }
+    },
+    "model": {
+        "module": "model.Uformer",
+        "main": "Model",
+        "args": {}
+    },
+    "loss_function": {
+        "module": "model.loss",
+        "main": "mse_loss",
+        "args": {}
+    },
+    "optimizer": {
+        "lr": 0.001,
+        "beta1": 0.9,
+        "beta2": 0.999
+    },
+    "train_dataset": {
+        "module": "dataset.waveform_dataset",
+        "main": "Dataset",
+        "args": {
+            "dataset": "C:/Users/Administrator/Desktop/Wave-U-Net-for-Speech-Enhancement-master/Wave-U-Net-for-Speech-Enhancement-master/dataset/traind.txt",
+            "limit": 12000,
+            "offset": 0,
+            "sample_length": 64000,
+            "mode": "train"
+        }
+    },
+    "validation_dataset": {
+        "module": "dataset.waveform_dataset",
+        "main": "Dataset",
+        "args": {
+            "dataset": "C:/Users/Administrator/Desktop/Wave-U-Net-for-Speech-Enhancement-master/Wave-U-Net-for-Speech-Enhancement-master/dataset/validationd.txt",
+            "limit": 200,
+            "offset": 0,
+            "mode": "validation"
+        }
+    },
+    "train_dataloader": {
+        "batch_size": 2,
+        "num_workers": 1,
+        "shuffle": true,
+        "pin_memory": true
+    }
+}
