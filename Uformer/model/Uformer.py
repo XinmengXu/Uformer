@@ -251,7 +251,7 @@ class CausalTransConvBlock(nn.Module):
 		
 class Model(nn.Module):
 
-    def __init__(self, channel_amp = 1, channel_phase=2):
+    def __init__(self, channel_amp = 1, channel_phase=3):
         super(Model, self).__init__()
         self.stft = ConvSTFT(512, 256, 512, 'hanning', 'complex', True)
         self.istft = ConviSTFT(512, 256, 512, 'hanning', 'complex', True)
@@ -271,7 +271,7 @@ class Model(nn.Module):
                                 nn.ReLU(),
                         )
         self.phase_conv1 = nn.Sequential(
-                                nn.Conv2d(2, channel_phase, 
+                                nn.Conv2d(3, channel_phase, 
                                         kernel_size=[3,5],
                                         padding=(1,2)
                                     ),
@@ -360,6 +360,7 @@ class Model(nn.Module):
                             torch.abs(cmp_spec[:,0])**2+
                             torch.abs(cmp_spec[:,1])**2,
                         )
+        phase_spec = torch.angle(cmp_spec)
         amp_spec = torch.unsqueeze(amp_spec, 1)
         spec = self.amp_conv1(cmp_spec)
 
@@ -400,10 +401,10 @@ class Model(nn.Module):
         spec = torch.transpose(spec, 1,3)
 
 	
-        phase_pro = self.phase_conv1(cmp_spec)			
+        phase_pro = self.phase_conv1(torch.cat([phase_spec, d], dim = 1))		
         phase_input = torch.cat([phase_pro, self.amp_conv2(d)], dim = 1)
       
-        phase_input = self.phase_conv2(phase_input)	
+        phase_input = self.phase_conv2(phase_pro)	
         p1 = self.phase_conv3(phase_input)
         p1 = self.phase_conv4(p1)
 		
@@ -414,12 +415,12 @@ class Model(nn.Module):
         p3 = self.phase_conv4(p3)
 
         p5 = self.phase_conv5(p3)
-        p5 = phase_pro + p5
+        p5 = phase_spec + p5
         p5 = p5/(torch.sqrt(
                             torch.abs(p5[:,0])**2+
                             torch.abs(p5[:,1])**2)
                         +1e-8).unsqueeze(1)
-        est_spec = amp_spec * d * p5
+        est_spec = d * p5
         est_spec = torch.cat([est_spec[:,0], est_spec[:,1]], 1)
         est_wav = self.istft(est_spec, None)
         est_wav = torch.squeeze(est_wav, 1)
